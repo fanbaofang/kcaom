@@ -1,0 +1,437 @@
+<!Dcotype html>
+
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>批量单据打印查询参数</title>
+        <meta name="author" content="Roy">
+        <meta name="discription" content="信贷系统批量单据打印输入窗口">
+        <style type="text/css">
+            span {font-size: 16px; width: 10px;}
+            input {width: 300px; font-size: 16px; text-indent: 2px; }
+            select {width: 300px; font-size: 16px; text-indent: 2px; padding: 2px 0px; }
+            table {                
+                display: block;
+                text-align: right; 
+            }
+            .input_panel {
+                box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.5);
+                border-radius: 8px; 
+                width: fit-content;
+                max-width: 100%;
+                padding: 30px 35px 30px; 
+                margin:auto;
+                position:absolute; 
+                top:50%;
+                left:50%;
+                margin:-300px 0 0 -250px;
+            }
+            .arg_name {
+                width: 150px;
+            }
+            .button {
+                font-size: 16px;
+                font-weight: bold;
+                border-radius: 4px;
+                padding: 10px 30px;
+                background-color: forestgreen;
+                color: white;
+                border: 0px; 
+            }
+
+            .date_button {
+                background-color: forestgreen;
+                font-style: bold;
+                color: white;
+                border: 0.5px;
+                border-radius: 2px;
+                height: 25px; 
+                margin: 0px 1px 2.5px 1px;
+            }
+        </style>
+
+        <script>
+            // 不从文件中进行读取，直接写进html
+            /*
+            function get_ini_file_content(file_path){
+                var fso = new ActiveXObject("Scripting.FileSystemObject");
+                var ini_file_content = "";
+                if(!fso.FileExists(file_path)){
+                    return false;
+                }else{
+                    var text_stream = fso.OpenTextFile(file_path);
+                    ini_file_content = text_stream.ReadAll();
+
+                    text_stream.close();
+                    fso = null;
+                }
+
+                return ini_file_content;
+            }
+            */
+            
+
+            function parse_ini_string(data){
+                var regex = {
+                  section: /^\s*\[\s*([\S ]+)\s*\]\s*$/,
+                  param: /^\s*([\S ]+)\s*=\s*([\S ]*)\s*$/,
+                  comment: /^\s*[; |#].*$/
+                };
+                var value = {};
+                var lines = data.split(/\r\n|\r|\n/);
+                var section = null;
+                lines.forEach(function(line){
+
+                  //console.log(line);
+
+                  if(regex.comment.test(line)){
+                    return;
+                  }else if(regex.param.test(line)){
+                    var match = line.match(regex.param);
+                    if(section){
+                      value[section][match[1]] = match[2];
+                    }else{
+                      value[match[1]] = match[2];
+                    }
+                  }else if(regex.section.test(line)){
+                    var match = line.match(regex.section);
+                    value[match[1]] = {};
+                    section = match[1];
+                  }else if(line.length == 0 && section){
+                    section = null;
+                  };
+                });
+                return value; 
+              }
+
+
+            function get_arg_value(ini_json, key){
+                var result = null;
+                var value  = null;
+                for(var i in ini_json){        
+                    value = ini_json[i];
+                    if(i == key){
+                        return value;
+                    } else {
+                        if(typeof(value) == "object"){
+                            result = get_arg_value(value, key);
+                            if(result != undefined){return result;}
+                        }
+                    }
+                }                
+            } 
+            
+
+            function set_default_input_value(element_id, ini_key){
+                if(document.getElementById(element_id).type == "date" && !get_arg_value(ini_json, ini_key)){
+                    document.getElementById(element_id).value = get_date_relative();
+                } else {
+                    document.getElementById(element_id).value = get_arg_value(ini_json, ini_key);
+                }
+                return;
+            }
+
+
+            function get_date_relative(sliding_date){
+                if(!sliding_date){sliding_date = 0;}
+
+                var now = new Date();
+
+                now.setDate(now.getDate() + sliding_date);
+
+                var year = now.getFullYear();
+                var month = ("0" + (now.getMonth()+1)).slice(-2);
+                var date = ("0" + (now.getDate())).slice(-2);
+
+                //console.log(year + "-" + month + "-" + date);
+                return year + "-" + month + "-" + date;
+            }
+
+
+            function validate_arg_input(start_date, end_date, business_type, file_save_dir){
+                var error_msg_arr = new Array();
+                var error_exists = false;
+                // 验证日期间隔
+                start_date = new Date(Date.parse(start_date.replace(/-/g, "/"))).getTime();
+                end_date = new Date(Date.parse(end_date.replace(/-/g, "/"))).getTime();
+                var date_interval = Math.floor((end_date - start_date) / 1000 / 60 / 60 / 24);
+
+                if(date_interval > 30) {
+                    error_msg_arr.push("请检查查询起止日期，查询时间段需小于30天。");
+                } else if(date_interval < 0){
+                    error_msg_arr.push("请检查查询起止日期，起始日期需早于结束日期。");
+                }
+
+                // 验证业务类型
+                if(business_type == "undefined"){
+                    error_msg_arr.push("请选择业务类型。");
+                }
+
+                // 验证存储路径
+                if(document.getElementById("input_file_save_dir").checked == true) {
+                    if(file_save_dir == "") {
+                        error_msg_arr.push("请输入存储路径。");
+                    } else if(!file_save_dir.replace(/([a-zA-Z]:)(\\[a-zA-Z\u4e00-\u9fa50-9-_. ]+)+/g, "") == ""){
+                        error_msg_arr.push("请输入正确的存储路径。例如\"D:\\文件\\批量单据打印\"");
+                    } 
+                }
+
+                var error_msg = error_msg_arr.join("\r\n");
+
+                if(error_msg != ""){
+                    error_exists = true;
+                    error_alert(error_msg);
+                }
+                return error_exists
+            }
+
+            
+            function error_alert(msg) {
+                //当前以alert()来产生报警
+                console.log("err_msg: \r\n" + msg);
+                alert(msg);
+            }
+
+            function submit_form() {
+
+                var start_date = document.getElementById("start_date").value;
+                var end_date = document.getElementById("end_date").value;
+                var business_type = document.getElementById("business_type").value;
+                var fund_type = document.getElementById("fund_type").value; 
+                var credit_type = document.getElementById("credit_type").value;
+                var contract_no = document.getElementById("contract_no").value;
+                var notification_no = document.getElementById("notification_no").value;
+                var receipt_no = document.getElementById("receipt_no").value;
+                if(document.getElementById("input_file_save_dir").checked == true) {
+                    var file_save_dir = document.getElementById("file_save_dir").value;
+                } else if(document.getElementById("select_file_save_dir").checked == true) {
+                    var file_save_dir = "";
+                }
+                
+                //校验输入
+                error_exists = validate_arg_input(start_date, end_date, business_type, file_save_dir);
+                if(error_exists) {
+                    return;
+                }
+
+                var result_json = "{\"起始日期\": \"" + start_date + "\", " + 
+                                    "\"结束日期\": \"" + end_date + "\", " + 
+                                    "\"业务类型\": \"" + business_type + "\", " + 
+                                    "\"融资模式\": \"" + fund_type + "\", " + 
+                                    "\"授信品种\": \"" + credit_type + "\", " + 
+                                    "\"合同编号\": \"" + contract_no + "\", " + 
+                                    "\"通知书编号\": \"" + notification_no + "\", " + 
+                                    "\"借据编号\": \"" + receipt_no + "\", " + 
+                                    "\"单据存储路径\": \"" + file_save_dir + "\"}";
+
+                document.getElementById("ResultValue").value = result_json;
+                console.log(result_json);
+                //window.close();
+            }
+
+
+            var ini_file_data = "[FlowArgs]\r\n起始日期=\r\n结束日期=2034-04-04\r\n业务类型=放款交易\r\n融资模式=b\r\n授信品种=c\r\n合同编号=\r\n通知书编号=e\r\n借据编号=f\r\n\r\n[LocalArgs]\r\n单据存储路径=D:\\文件\\金智维\\帮助材料"
+            //var ini_file_data = "; 需要放在Server目录下\r\n\r\n[FindReader]\r\nFreDllPath=D:\DevelopedSoft\\ABBYY\/SDK/Bin\\FREngine.dll\r\nCustomerProjectId=xnuKNn5PLRzqPiwFyJG4\r\nLicensePath=\r\nLicensePassword=\r\nSamplesFolder=C:\\ProgramData\\ABBYY\\SDK\\12\\FineReader Engine\\Samples"
+
+            var ini_json = parse_ini_string(ini_file_data);
+            //var test_value = String(get_arg_value(ini_json, "起始日期"));
+            //console.log(test_value);
+
+
+
+
+
+        </script>
+   
+    </head>
+
+    <body>  
+        <div class="input_panel">
+            <form id="ResultValue" action="" >
+                <table name="input_arguments" cellpadding="5px" cellspacing="5px">
+                <tr>
+                    <td>
+                        <span style="color: red;">* </span>
+                        <span class="arg_name">起始日期：</span>
+                    </td>
+                    <td style="text-align: left;">
+                        <input type="date" name="start_date" id="start_date" value="" style="width: 300px;">               
+                    </td>
+                </tr>
+
+                <!-- 起始日期按钮 -->
+                <tr style="text-align: left;">
+                    <td></td>
+                    <td>
+                        <button type="button" class="date_button" onclick="document.getElementById('start_date').value = get_date_relative();">今天</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('start_date').value = get_date_relative(-1);">昨天</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('start_date').value = get_date_relative(-7);">一周前</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('start_date').value = get_date_relative(-14);">两周前</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('start_date').value = get_date_relative(-30);">一个月前</button>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">* </span>
+                        <span class="arg_name">结束日期：</span>
+                    </td>
+                    <td style="text-align: left;">
+                        <input type="date" name="end_date" id="end_date" value="" style="width: 300px;">
+                    </td>
+                </tr>
+
+                <!-- 结束日期按钮 -->
+                <tr style="text-align: left;">
+                    <td></td>
+                    <td>
+                        <button type="button" class="date_button" onclick="document.getElementById('end_date').value = get_date_relative();">今天</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('end_date').value = get_date_relative(-1);">昨天</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('end_date').value = get_date_relative(-7);">一周前</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('end_date').value = get_date_relative(-14);">两周前</button>
+                        <button type="button" class="date_button" onclick="document.getElementById('end_date').value = get_date_relative(-30);">一个月前</button>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">* </span>
+                        <span class="arg_name">业务类型：</span>
+                    </td>
+                    <td>
+                        <select type="text" name="business_type" id="business_type" value="请选择业务类型" >
+                            <option name="option0" value="undefined">请选择业务类型</option>
+                            <option name="option1" value="放款交易">放款交易</option>
+                            <option name="option2" value="还款交易">还款交易</option>
+                            <option name="option3" value="受托支付">受托支付</option>
+                            <option name="option4" value="费用支付">费用支付</option>
+                            <option name="option5" value="已收费用退回">已收费用退回</option>
+                            <option name="option6" value="已收利息退回">已收利息退回</option>
+                            <option name="option7" value="外部银团参与行支付资金">外部银团参与行支付资金</option>
+                            <option name="option8" value="贷款停息">贷款停息</option>
+                            <option name="option9" value="贷款终止停息">贷款终止停息</option>
+                            <option name="option10" value="贷款已结利息调整">贷款已结利息调整</option>
+                            <option name="option11" value="贷款已结管理费调整">贷款已结管理费调整</option>
+                            <option name="option12" value="放款撤销">放款撤销</option>
+                            <option name="option13" value="还款撤销">还款撤销</option>
+                            <option name="option14" value="代收代付应收账款">代收代付应收账款</option>
+                            <option name="option15" value="保理回款转出代收代付资金发放">保理回款转出代收代付资金发放</option>
+                            <option name="option16" value="保理手续费收取">保理手续费收取</option>
+                            <option name="option17" value="费用收取单">费用收取单</option>
+                            <option name="option18" value="违约金收取单">违约金收取单</option>
+                            <option name="option19" value="贷款未结利息调整">贷款未结利息调整</option>
+                            <option name="option20" value="放款通知书">放款通知书</option>
+                        </select>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">&ensp; </span>
+                        <span class="arg_name">融资模式：</span>
+                    </td>
+                    <td>
+                        <input type="text" name="fund_type" id="fund_type" value="" placeholder="">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">&ensp; </span>
+                        <span class="arg_name">授信品种：</span>
+                    </td>
+                    <td>
+                        <input type="text" name="credit_type" id="credit_type" value="" placeholder="" >
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">&ensp; </span>
+                        <span class="arg_name">合同编号：</span>
+                    </td>
+                    <td>
+                        <input type="text" name="contract_no" id="contract_no" value="" placeholder="">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">&ensp; </span>
+                        <span class="arg_name">通知书编号：</span>
+                    </td>
+                    <td>
+                        <input type="text" name="notification_no" id="notification_no" value="" placeholder="">
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <span style="color: red;">&ensp; </span>
+                        <span class="arg_name">借据编号：</span>
+                    </td>
+                    <td>
+                        <input type="text" name="receipt_no" id="receipt_no" value="" placeholder="">
+                    </td>
+                </tr>
+
+                <!-- 单据存储位置 -->
+                <tr>
+                    <td>
+                        <span style="color: red;">* </span>
+                        <span class="arg_name">单据文件存储位置：</span><br>
+                    </td>
+                    <td style="width: 300px; text-align: left;" > 
+                        <span style="width: 150p; ">
+                            <input type="radio" style="width: 15px" name="file_save_dir_radio" id="input_file_save_dir" value="input_dir" onclick="document.getElementById('file_save_dir').style.display = 'block'; document.getElementById('select_dir_hint').style.display = 'none';" checked="checked"> 输入存储位置
+                        </span>
+                        <span>&ensp;&ensp;</span>
+                        <span style="width: 150px; margin:0px;">
+                            <input type="radio" style="width: 15px" name="file_save_dir_radio" id="select_file_save_dir" value="select_dir" onclick="document.getElementById('select_dir_hint').style.display = 'block'; document.getElementById('file_save_dir').style.display = 'none';"  > 选择新存储位置
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;" colspan="2"> 
+                        <input type="text" name="file_save_dir" id="file_save_dir" value="" placeholder="" style="width:470px; display:block;" >
+                        <div class="select_dir_hint" id="select_dir_hint" style="text-align:center; padding-top:5px; background-color: rgba(140, 255, 174, 0.344); height: 25px; font-weight:500;display:none;">点击提交后进行文件存储路径选择</div>
+                    </td>
+                </tr> 
+
+                </table>
+
+                <script>
+                    set_default_input_value("start_date", "起始日期");
+                    set_default_input_value("end_date", "结束日期");
+                    set_default_input_value("business_type", "业务类型");
+                    set_default_input_value("fund_type", "融资模式");
+                    set_default_input_value("credit_type", "授信品种");
+                    set_default_input_value("contract_no", "合同编号");
+                    set_default_input_value("notification_no", "通知书编号");
+                    set_default_input_value("receipt_no", "借据编号");
+                    set_default_input_value("file_save_dir", "单据存储路径");
+                </script>
+            </form>
+
+            <div style="padding: 15px;">
+                <center>
+                    <button type="submit" name="submit" class="button" onclick="submit_form()">提交</button>
+                </center>
+            </div>
+
+        </div>
+
+        <!-- <div>
+            <h1>Debug content: </h1>
+            <br>
+
+            <p id="debug_txt">
+                <script>
+                    //document.getElementById("debug_txt").innerText=1 + '\r\n' + '';
+
+                </script>
+            </p>
+ 
+        </div> -->
+    </body> 
+</html>

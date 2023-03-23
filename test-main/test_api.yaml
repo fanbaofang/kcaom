@@ -1,0 +1,29 @@
+-
+  name: 获得token鉴权码的接口
+  request:
+    url: https://api.weixin.qq.com/cgi-bin/token
+    method: get
+    headers:
+      Content-Type: application/json
+    params:
+      grant_type: client_credential
+      appid: wx6bllb3efdlcdc290
+      secret: 106a9c6157c4db5f6029918738f9529d
+#  validate:断言
+  validate:
+    - eq: {expires_in: 7200}
+
+#用例2 反例，相比于用例1少了grant_type: client_credential
+-
+  name: 获得token鉴权码的接口
+  request:
+    url: https://api.weixin.qq.com/cgi-bin/token
+    method: get
+    headers:
+      Content-Type: application/json
+    params:
+      appid: wx6bllb3efdlcdc290
+      secret: 106a9c6157c4db5f6029918738f9529d
+#  validate:断言
+  validate:
+    - eq: {expires_in: 7200}

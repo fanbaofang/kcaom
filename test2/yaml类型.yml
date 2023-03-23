@@ -1,0 +1,15 @@
+- hosts: webservers
+  tasks:
+    - name: ensure hosts is active
+      ping: 
+    - name: ensure apache is at the latest version
+      yum: pkg=httpd state=latest
+      notify:
+        - restart apache
+    - name: ensure apache is running
+      service: name=httpd state=started
+  handlers:
+    - name: restart apache
+      service: name=httpd state=restarted
+      service: name=httpd state=restarted
+#更新脚本

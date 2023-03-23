@@ -1,0 +1,147 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{95BFA659-EC6E-4AA2-A10F-512B1C18C924}</ProjectGuid>
+			<ProjectVersion>12.0</ProjectVersion>
+			<MainSource>Control.dpr</MainSource>
+			<Config Condition="'$(Config)'==''">Debug</Config>
+			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+			<Cfg_1>true</Cfg_1>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>BaseChild;..\Common;..\Common\Runtime;..\Common\Report;..\Common\Iocp;..\Common\Database;..\Common\Memory;..\Common\FormSkin;..\Common\NativeXml;..\Common\Java;..\Common\kcapi;..\Common\Syslog;..\Common\t2sdk;..\Common\NamePipe;..\Common\sftp;..\Common\D2010;..\Common\AES;..\Common\lockbox;Funcs\System;Funcs\User;Funcs\Script;Funcs\Agent;Funcs\Event;Funcs\Monitor;Funcs\Script\Plugins;Funcs\Script\Available;Funcs\Report;Funcs\Dialogs;Funcs\Flow;Funcs\PubFunc;Funcs\IMessage;Funcs\Script\Linux;Funcs\Script\Telnet;Funcs\Script\Mstsc;Funcs\Script\AvailableEditor;Funcs\Task;Funcs\Home;Funcs\Backup;Funcs\Publish;Funcs\SubServer;Funcs\BigScreenEx;Funcs\WorkForm;Funcs\Test;Funcs\HtzqUser;Funcs\Cpic;Funcs\MetroHome;Funcs\Split;Funcs\Gccs;Funcs\Csdc;Funcs\yymonitor;Funcs\RPA;Funcs\Ebscn;Funcs\Products;Funcs\Distribution;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_ExeOutput>..\Bin\Control\</DCC_ExeOutput>
+			<DCC_DcuOutput>Dcu\</DCC_DcuOutput>
+			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
+			<DCC_DependencyCheckOutputName>..\Bin\Control\Control.exe</DCC_DependencyCheckOutputName>
+			<DCC_ImageBase>00400000</DCC_ImageBase>
+			<DCC_Platform>x86</DCC_Platform>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_1)'!=''">
+			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+			<DCC_DebugInformation>false</DCC_DebugInformation>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+		</PropertyGroup>
+		<ItemGroup>
+			<DelphiCompile Include="Control.dpr">
+				<MainSource>MainSource</MainSource>
+			</DelphiCompile>
+			<DCCReference Include="Main.pas">
+				<Form>MainFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Base\BaseForm.pas">
+				<Form>BaseFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Base\BaseGlobal.pas"/>
+			<DCCReference Include="Base\BaseModal.pas">
+				<Form>BaseModalFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Base\BaseState.pas">
+				<Form>BaseStateFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Base\BaseThread.pas"/>
+			<DCCReference Include="BaseChild\BCChild.pas">
+				<Form>BCChildFrm</Form>
+			</DCCReference>
+			<DCCReference Include="BaseChild\BCChildTool.pas">
+				<Form>BCChildToolFrm</Form>
+			</DCCReference>
+			<DCCReference Include="BaseChild\BCControl.pas"/>
+			<DCCReference Include="BaseChild\BCMain.pas">
+				<Form>BCMainFrm</Form>
+			</DCCReference>
+			<DCCReference Include="MainFrame\Global.pas"/>
+			<DCCReference Include="MainFrame\PubDM.pas">
+				<Form>DM</Form>
+				<DesignClass>TDataModule</DesignClass>
+			</DCCReference>
+			<DCCReference Include="MainFrame\uAppFunc.pas"/>
+			<DCCReference Include="MainFrame\MainFrame.pas">
+				<Form>MainFrameFrm</Form>
+			</DCCReference>
+			<DCCReference Include="MainFrame\Login.pas">
+				<Form>LoginFrm</Form>
+			</DCCReference>
+			<DCCReference Include="Base\BasePopup.pas">
+				<Form>BasePopupFrm</Form>
+			</DCCReference>
+			<DCCReference Include="MainAomScript.pas">
+				<Form>MainAomScriptFrm</Form>
+			</DCCReference>
+			<DCCReference Include="MainAomConsole.pas"/>
+			<DCCReference Include="MainFrame\HtzqLogin.pas">
+				<Form>HtzqLoginFrm</Form>
+			</DCCReference>
+			<BuildConfiguration Include="Base">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Debug">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_1</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
+			<Borland.ProjectType/>
+			<BorlandProject>
+				<Delphi.Personality>
+					<Source>
+						<Source Name="MainSource">Control.dpr</Source>
+					</Source>
+					<Parameters>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">3</VersionInfo>
+						<VersionInfo Name="MinorVer">0</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">2052</VersionInfo>
+						<VersionInfo Name="CodePage">936</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">debug</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription"/>
+						<VersionInfoKeys Name="FileVersion">3.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+				</Delphi.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

@@ -1,0 +1,19 @@
+{$I 组件调试.run}
+{$I 输入模板.run}
+延时10s()
+
+{$I 帮助信息.run}
+
+{$I 函数主体.run}
+function main_7B15BABA953044338487F928CAA330E7(funcVar0{参数}:String): String{返回};
+begin
+  
+  sleep(10000);
+  
+  Result := SetTargetLVD('正常', '数据', '描述');
+  Trace(Result);
+end;
+
+{$I 调试开始.run}
+main_7B15BABA953044338487F928CAA330E7('参数1')
+{$I 调试结束.run}
